@@ -11,7 +11,10 @@
     "storage"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "https://leetcode.com/*",
+    "https://www.geeksforgeeks.org/*",
+    "https://r.jina.ai/*"
   ],
   "background": {
     "service_worker": "background.js"
