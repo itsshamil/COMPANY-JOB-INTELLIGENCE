@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Job Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            width: 320px;
+            background: #0a0e1a;
+            color: #F8FAFC;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .popup-logo {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 245, 212, 0.12), rgba(99, 102, 241, 0.12));
+            border-radius: 10px;
+            border: 1px solid rgba(0, 245, 212, 0.2);
+        }
+
+        .popup-title {
+            font-size: 15px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00F5D4, #6366F1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .popup-subtitle {
+            font-size: 10px;
+            color: #64748B;
+            margin-top: 1px;
+        }
+
+        .status-card {
+            padding: 14px;
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 12px;
+            margin-bottom: 14px;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.active {
+            background: #00F5D4;
+            box-shadow: 0 0 8px rgba(0, 245, 212, 0.5);
+        }
+
+        .status-dot.inactive {
+            background: #64748B;
+        }
+
+        .status-text {
+            font-size: 12px;
+            color: #94A3B8;
+        }
+
+        .status-company {
+            font-weight: 700;
+            color: #F8FAFC;
+        }
+
+        .open-panel-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #00F5D4, #6366F1);
+            color: #0a0e1a;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        .open-panel-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 245, 212, 0.3);
+        }
+
+        .open-panel-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .supported-section {
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            padding-top: 12px;
+        }
+
+        .supported-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748B;
+            margin-bottom: 8px;
+        }
+
+        .company-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .company-chip {
+            padding: 3px 8px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.08);
+            border-radius: 14px;
+            font-size: 10px;
+            color: #94A3B8;
+            transition: all 0.2s ease;
+        }
+
+        .company-chip:hover {
+            border-color: rgba(0, 245, 212, 0.3);
+            color: #00F5D4;
+        }
+
+        .footer-line {
+            text-align: center;
+            font-size: 9px;
+            color: #475569;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="popup-header">
+        <div class="popup-logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path
+                    d="M20 7H4C2.89543 7 2 7.89543 2 9V19C2 20.1046 2.89543 21 4 21H20C21.1046 21 22 20.1046 22 19V9C22 7.89543 21.1046 7 20 7Z"
+                    stroke="#00F5D4" stroke-width="2" />
+                <path d="M16 7V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V7" stroke="#00F5D4"
+                    stroke-width="2" />
+                <circle cx="12" cy="14" r="2" fill="#6366F1" />
+            </svg>
+        </div>
+        <div>
+            <div class="popup-title">Job Intelligence</div>
+            <div class="popup-subtitle">Smart Career Detection</div>
+        </div>
+    </div>
+
+    <div class="status-card">
+        <div class="status-row">
+            <div class="status-dot" id="status-dot"></div>
+            <div class="status-text" id="status-text">Checking...</div>
+        </div>
+    </div>
+
+    <button class="open-panel-btn" id="open-panel-btn" disabled>Open Career Dashboard →</button>
+
+    <div class="supported-section">
+        <div class="supported-label">Featured Companies</div>
+        <div class="company-grid" id="company-grid"></div>
+        <div style="text-align:center;font-size:9px;color:#64748B;margin-top:8px;">✨ Works on all company websites</div>
+    </div>
+
+    <div class="footer-line">v1.0 • Career Intelligence Extension</div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
