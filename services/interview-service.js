@@ -15,15 +15,13 @@ class InterviewService {
             }
 
             // Fetch data in parallel
-            const [leetCodeProblems, geeksforGeeksExperiences, searchResources] = await Promise.all([
+            const [leetCodeProblems, searchResources] = await Promise.all([
                 this.getLeetCodeProblems(companyName),
-                this.getGeeksforGeeksExperiences(companyName),
                 this.getSearchResources(companyName)
             ]);
 
             const interviewData = {
                 leetCodeProblems,
-                geeksforGeeksExperiences,
                 resources: searchResources,
                 cachedAt: Date.now(),
                 source: 'aggregated'

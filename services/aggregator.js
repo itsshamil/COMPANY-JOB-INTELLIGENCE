@@ -42,20 +42,23 @@ class DataAggregator {
             jobs: finalJobs,
             interviewResources: interviewData.resources,
             interviewQuestions: [
-                ...(interviewData.leetCodeProblems || []).map(p => ({
+                ...interviewData.leetCodeProblems.map(p => ({
                     title: p.title,
-                    category: p.difficulty,
+                    category: 'Coding',
                     source: 'LeetCode',
-                    url: p.url
+                    url: p.url,
+                    difficulty: p.difficulty
                 })),
-                ...(interviewData.geeksforGeeksExperiences || []).map(e => ({
-                    title: e.title,
-                    category: 'Experience',
-                    source: 'GeeksforGeeks',
-                    excerpt: e.excerpt
+                ...interviewData.resources.map(r => ({
+                    title: r.title,
+                    category: r.type,
+                    source: 'Search',
+                    url: r.url,
+                    difficulty: 'N/A'
                 }))
             ],
             reviews: reviewData.reviews,
+            proMetrics: reviewData.proMetrics || DataAggregator._defaultProMetrics(),
             aiTips: [],
             dataSources: {
                 company: companyInfo.source,
@@ -91,5 +94,21 @@ class DataAggregator {
 
         console.log(`[Aggregator] Final payload ready for ${companyName}`, aggregated);
         return aggregated;
+    }
+
+    static _defaultProMetrics() {
+        return {
+            ceoRating: 0,
+            ceoApproval: 0,
+            retentionRate: 0,
+            salaryRange: { min: 0, max: 0, currency: 'USD' },
+            averageBonus: 0,
+            benefitsScore: 0,
+            interviewDifficulty: 0,
+            hiringActivity: 'moderate',
+            growthTrajectory: 'stable',
+            departmentCount: 0,
+            rolesHiring: []
+        };
     }
 }
