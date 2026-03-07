@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="icons/icon128.png" alt="Company Job Intelligence Logo" width="128" height="128">
+</div>
+
 # 🚀 Company Job Intelligence
 
 **Real-time career insights, delivered the moment you visit a company website.**
