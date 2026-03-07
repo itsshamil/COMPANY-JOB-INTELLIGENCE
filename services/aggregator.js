@@ -11,7 +11,7 @@ class DataAggregator {
         const [companyInfo, jobData, interviewData, reviewData] = await Promise.all([
             CompanyService.getInfo(companyName, domain, faviconUrl),
             JobService.getJobs(companyName, domain, scrapedJobs || [], pageContent || '', pageUrl || ''),
-            Promise.resolve(InterviewService.getInterviewResources(companyName)),
+            InterviewService.getInterviewData(companyName),
             ReviewService.getEmployeeInsights(companyName)
         ]);
 
@@ -41,7 +41,20 @@ class DataAggregator {
             ...companyInfo,
             jobs: finalJobs,
             interviewResources: interviewData.resources,
-            interviewQuestions: interviewData.practiceQuestions || [],
+            interviewQuestions: [
+                ...(interviewData.leetCodeProblems || []).map(p => ({
+                    title: p.title,
+                    category: p.difficulty,
+                    source: 'LeetCode',
+                    url: p.url
+                })),
+                ...(interviewData.geeksforGeeksExperiences || []).map(e => ({
+                    title: e.title,
+                    category: 'Experience',
+                    source: 'GeeksforGeeks',
+                    excerpt: e.excerpt
+                }))
+            ],
             reviews: reviewData.reviews,
             aiTips: [],
             dataSources: {
