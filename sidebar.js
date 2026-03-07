@@ -92,8 +92,308 @@ async function loadWithAI(companyName, domain, key, isKnown, faviconUrl, careerP
     // Determine badge to show based on data sources
     let source = 'offline';
     const ds = aggregatedData.dataSources;
+    if (ds.jobs === 'jina-search' || ds.jobs === 'jina-reader' || ds.jobs === 'page-scrape' || ds.reviews === 'scraped' || ds.company === 'jina-search') {
+      source = 'live'; // Jina AI scraped real data
+    } else if (ds.company === 'wikipedia') {
+      source = 'api'; // Used APIs like Wikipedia
+    } else if (ds.company === 'curated') {
+      source = 'cached'; // Curated offline data
+    }
+
+    showDashboard(aggregatedData, source);
+
+    // Only show "no key" banner if ALL data sources are missing/defaults
+    const allSources = Object.values(ds).filter(v => typeof v === 'string');
+    const allMissing = allSources.every(s => s === 'missing' || s === 'defaults' || s === 'none');
+    if (allMissing) {
+      showNoKeyBanner();
+    }
+
+  } catch (err) {
+    console.error('Data Aggregator failed:', err);
+    hideLoading();
+    showEmptyState();
+  }
+}
+
+function showLoading(companyName) {
+  const loader = document.getElementById('ai-loading');
+  const sub = document.getElementById('ai-loading-sub');
+  if (loader) {
+    loader.classList.remove('hidden');
+    if (sub) sub.textContent = `Analyzing ${companyName}`;
+  }
+}
+
+function hideLoading() {
+  const loader = document.getElementById('ai-loading');
+  if (loader) loader.classList.add('hidden');
+}
+
+function showNoKeyBanner() {
+  // Removed: No Gemini API key needed
+}
+
+function showEmptyState() {
+  document.getElementById('empty-state').classList.remove('hidden');
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('loading-state').classList.add('hidden'); // Assuming 'loading-state' is another loading indicator
+  hideLoading(); // Keep this for 'ai-loading'
+
+  // Set default analyzing state instead of "No Company Detected"
+  if (!isRefreshing) {
+    document.querySelector('.empty-title').textContent = "Analyzing...";
+    document.querySelector('.empty-description').textContent = "Looking for career intelligence insights...";
+  }
+}
+
+function showDashboard(company, source) {
+  document.getElementById('empty-state').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+
+  // Remove old no-key banner if AI was used
+  if (source === 'ai' || source === 'cached') {
+    document.getElementById('no-key-banner')?.remove();
+  }
+
+  renderHeader(company, source);
+  renderStats(company);
+  renderCultureTags(company);
+  renderJobs(company);
+  renderInterviewQuestions(company);
+  renderInterviewResources(company);
+  renderReviews(company);
+  renderAITips(company);
+  initTabs();
+}
+
+/* ============================================
+   Header
+   ============================================ */
+function renderHeader(company, source) {
+  document.getElementById('company-logo').src = company.logo;
+  document.getElementById('company-logo').alt = company.name;
+  document.getElementById('company-name').textContent = company.name;
+  document.getElementById('company-industry').textContent = company.industry;
+  document.getElementById('company-hq').textContent = company.headquarters;
+  document.getElementById('company-size').textContent = company.employeeCount + ' employees';
+
+  // Description Toggle
+  const descEl = document.getElementById('company-desc');
+  const toggleBtn = document.getElementById('desc-toggle');
+
+  if (company.description) {
+    descEl.textContent = company.description;
+    // Show toggle if description is long
+    if (company.description.length > 90) {
+      toggleBtn.classList.remove('hidden');
+      toggleBtn.textContent = 'Show more';
+      descEl.classList.add('collapsed');
+
+      toggleBtn.onclick = () => {
+        if (descEl.classList.contains('collapsed')) {
+          descEl.classList.remove('collapsed');
+          toggleBtn.textContent = 'Show less';
+        } else {
+          descEl.classList.add('collapsed');
+          toggleBtn.textContent = 'Show more';
+        }
+      };
+    } else {
+      toggleBtn.classList.add('hidden');
+      descEl.classList.remove('collapsed');
+    }
+  } else {
+    descEl.textContent = '';
+    toggleBtn.classList.add('hidden');
+  }
+
+  // Data source badge
+  const existing = document.querySelector('.data-source-badge');
+  if (existing) existing.remove();
+
+  const badge = document.createElement('span');
+  if (source === 'ai') {
+    badge.className = 'data-source-badge ai';
+    badge.textContent = '✨ AI Live';
+  } else if (source === 'live') {
+    badge.className = 'data-source-badge ai';
+    badge.textContent = '🔴 Live Scraped';
+  } else if (source === 'api') {
+    badge.className = 'data-source-badge cached';
+    badge.textContent = '🌐 API Data';
+  } else if (source === 'cached') {
+    badge.className = 'data-source-badge cached';
+    badge.textContent = '⚡ Cached';
+  } else {
+    badge.className = 'data-source-badge offline';
+    badge.textContent = '📦 Offline';
+  }
+  document.querySelector('.company-text')?.appendChild(badge);
+}
+
+/* ============================================
+   Stats Bar
+   ============================================ */
+function renderStats(company) {
+  document.getElementById('stat-jobs').textContent = company.jobs?.length || 0;
+}
+
+/* ============================================
+   Culture Tags
+   ============================================ */
+function renderCultureTags(company) {
+  const container = document.getElementById('culture-tags');
+  container.innerHTML = '';
+  (company.culture || []).forEach(tag => {
+    const el = document.createElement('span');
+    el.className = 'culture-tag';
+    el.textContent = tag;
+    container.appendChild(el);
+  });
+}
+
+/* ============================================
+   Jobs
+   ============================================ */
+function renderJobs(company) {
+  const container = document.getElementById('jobs-list');
+  const count = document.getElementById('jobs-count');
+  const appSummaryContainer = document.getElementById('application-summary-container');
+  const appSummaryText = document.getElementById('application-summary-text');
+
+  container.innerHTML = '';
+  const jobs = company.jobs || [];
+  count.textContent = jobs.length + ' positions';
+
+  // Render AI Application Insights
+  if (company.applicationSummary) {
+    appSummaryText.textContent = company.applicationSummary;
+    appSummaryContainer.classList.remove('hidden');
+  } else {
+    appSummaryContainer.classList.add('hidden');
+  }
+
+  if (jobs.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding: 24px 12px; color: var(--text-muted); font-size: 13px; background: rgba(148,163,184,0.05); border-radius: var(--radius-md);">No open positions found.</div>`;
+    return;
+  }
+
+  jobs.forEach((job, i) => {
+    // Generate a search URL if the job doesn't have a direct URL
+    const jobUrl = job.url || `https://www.indeed.com/jobs?q=${encodeURIComponent(company.name + ' ' + (job.title || ''))}`;
+
+    const card = document.createElement('a');
+    card.className = 'job-card job-card-link';
+    card.href = jobUrl;
+    card.target = '_blank';
+    card.rel = 'noopener noreferrer';
+    card.title = 'Click to search/apply for this job';
+    card.style.animationDelay = `${i * 0.08}s`;
+    card.innerHTML = `
+      <div class="job-card-header">
+        <span class="job-title">${job.title || 'Untitled'}</span>
+        <span class="job-salary">${job.salary || ''}</span>
+      </div>
+      <div class="job-details">
+        <span class="job-tag department">${job.department || 'General'}</span>
+        <span class="job-tag location">📍 ${job.location || 'TBD'}</span>
+        <span class="job-tag type">${job.type || 'Full-time'}</span>
+        <span class="job-tag level">${job.level || ''}</span>
+      </div>
+      <div class="job-posted" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>${job.posted ? 'Posted ' + job.posted : ''}</span>
+        <span style="font-size: 10px; opacity: 0.6;">${job.source || ''}</span>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+/* ============================================
+   Interview Questions
+   ============================================ */
+function renderInterviewQuestions(company) {
+  const container = document.getElementById('interview-list');
+  const count = document.getElementById('interview-count');
+  container.innerHTML = '';
+  const questions = company.interviewQuestions || [];
+  count.textContent = questions.length + ' questions';
+
+  if (questions.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding: 24px 12px; color: var(--text-muted); font-size: 13px; background: rgba(148,163,184,0.05); border-radius: var(--radius-md);">No interview questions found for this company.</div>`;
+    return;
+  }
+
+  questions.forEach((q, i) => {
+    const diffClass = (q.difficulty || 'medium').toLowerCase();
+    const card = document.createElement('a');
+    card.className = 'interview-card';
+    card.href = q.url || '#';
+    card.target = '_blank';
+    card.rel = 'noopener';
+    card.style.animationDelay = `${i * 0.08}s`;
+    card.innerHTML = `
+      <div class="difficulty-indicator ${diffClass}"></div>
+      <div class="interview-info">
+        <div class="interview-title">${q.title || 'Question'}</div>
+        <div class="interview-meta">
+          <span class="interview-category">${q.category || ''}</span>
+          <span class="interview-source">• ${q.source || 'Unknown'}</span>
+        </div>
+      </div>
+      <span class="difficulty-badge ${diffClass}">${q.difficulty || 'Medium'}</span>
+    `;
+    container.appendChild(card);
+  });
+}
+
+/* ============================================
+   Interview Resources
+   ============================================ */
+function renderInterviewResources(company) {
+  const container = document.getElementById('interview-resources');
+  container.innerHTML = '';
+  const resources = company.interviewResources || [];
+
+  if (resources.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding: 12px; color: var(--text-muted); font-size: 12px; background: rgba(148,163,184,0.05); border-radius: var(--radius-md);">No additional resources found.</div>`;
+    return;
+  }
+
+  resources.forEach((r, i) => {
+    const card = document.createElement('a');
+    card.className = 'resource-link';
+    card.href = r.url || '#';
+    card.target = '_blank';
+    card.rel = 'noopener';
+    card.style.animationDelay = `${i * 0.05}s`;
+    card.innerHTML = `
+      <div class="resource-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+      </div>
+      <div class="resource-info">
+        <div class="resource-title">${r.title || 'Resource'}</div>
+        <div class="resource-type">${r.type || 'Link'}</div>
+      </div>
+      <div class="resource-arrow">↗</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+/* ============================================
+   Reviews
+   ============================================ */
+function renderReviews(company) {
   const container = document.getElementById('reviews-content');
   container.innerHTML = '';
+
+  // Render pro metrics first
+  renderProMetrics(company);
 
   // Render review sources as cards instead of plain links
   const sourcesContainer = document.getElementById('review-sources');
