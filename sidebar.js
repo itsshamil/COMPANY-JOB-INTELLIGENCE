@@ -10,8 +10,39 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.runtime.openOptionsPage();
   });
 
-  // Check for detected company
-  loadCompanyData();
+  // Check for Jina key before running analysis
+  chrome.storage.sync.get('jinaApiKey', (result) => {
+    if (result.jinaApiKey) {
+      // Key already saved — proceed normally
+      loadCompanyData();
+    } else {
+      // Show Jina prompt first
+      showJinaPrompt();
+    }
+  });
+
+  // Jina prompt button handlers
+  document.getElementById('jina-prompt-save-analyze')?.addEventListener('click', () => {
+    const key = document.getElementById('jina-prompt-input').value.trim();
+    const statusEl = document.getElementById('jina-prompt-status');
+    if (!key) {
+      statusEl.textContent = '\u26a0\ufe0f Please enter your Jina API key first.';
+      statusEl.style.display = 'block';
+      statusEl.style.background = 'rgba(248,113,113,0.1)';
+      statusEl.style.color = '#F87171';
+      statusEl.style.border = '1px solid rgba(248,113,113,0.2)';
+      return;
+    }
+    chrome.storage.sync.set({ jinaApiKey: key }, () => {
+      hideJinaPrompt();
+      startAnalysis();
+    });
+  });
+
+  document.getElementById('jina-prompt-skip')?.addEventListener('click', () => {
+    hideJinaPrompt();
+    startAnalysis();
+  });
 
   // Refresh button - manual reload only
   let isRefreshing = false;
@@ -132,6 +163,45 @@ function hideLoading() {
 
 function showNoKeyBanner() {
   // Removed: No Gemini API key needed
+}
+
+/**
+ * Called after the Jina prompt is dismissed (key saved or skipped).
+ * Triggers a fresh content-script scan of the current tab, then loads data.
+ * Falls back to loadCompanyData() immediately if no active tab is available.
+ */
+function startAnalysis() {
+  showEmptyState();
+  document.querySelector('.empty-title').textContent = 'Analyzing...';
+  document.querySelector('.empty-description').textContent = 'Scanning page for company data...';
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (!tabs[0]) {
+      loadCompanyData();
+      return;
+    }
+
+    // Ask the content script to re-detect the company on the current page
+    chrome.tabs.sendMessage(tabs[0].id, { type: 'FORCE_REFRESH' }, () => {
+      if (chrome.runtime.lastError) {
+        // Content script not injected (e.g. restricted URL) — just load with whatever is cached
+        loadCompanyData();
+        return;
+      }
+      // Give background.js a moment to persist the detected company, then load
+      setTimeout(() => loadCompanyData(), 300);
+    });
+  });
+}
+
+function showJinaPrompt() {
+  document.getElementById('jina-prompt').classList.remove('hidden');
+  document.getElementById('empty-state').classList.add('hidden');
+  document.getElementById('dashboard').classList.add('hidden');
+}
+
+function hideJinaPrompt() {
+  document.getElementById('jina-prompt').classList.add('hidden');
 }
 
 function showEmptyState() {

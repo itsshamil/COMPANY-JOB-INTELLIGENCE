@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Company Job Intelligence",
-  "version": "199.0",
+  "version": "1.3.5",
   "description": "Smart career detection – discover jobs, interview questions, and employee insights when browsing company websites.",
   "permissions": [
     "activeTab",

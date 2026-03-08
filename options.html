@@ -276,6 +276,37 @@
             <div class="status" id="status-msg"></div>
         </div>
 
+        <!-- Jina API Key Card -->
+        <div class="card">
+            <div class="card-title">
+                🔍 Jina AI API Key
+            </div>
+            <div class="card-desc">
+                Required for live web scraping (job listings, company info). Jina offers a
+                <strong style="color:#00F5D4;">free key with 1M requests/day</strong> — no account needed.
+            </div>
+            <div class="input-group">
+                <input type="password" id="jina-key-input" class="api-input" placeholder="jina_..." autocomplete="off">
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="jina-save-btn">Save Key</button>
+                <button class="btn btn-secondary" id="jina-test-btn">Test Connection</button>
+                <button class="btn btn-danger" id="jina-clear-btn">Clear</button>
+            </div>
+            <div class="status" id="jina-status-msg"></div>
+        </div>
+
+        <!-- How to get Jina API Key -->
+        <div class="card info-card">
+            <div class="card-title">📋 How to Get a Jina API Key (Free, No Login)</div>
+            <ol class="steps">
+                <li>Go to <a href="https://jina.ai/" target="_blank">jina.ai</a></li>
+                <li>Click <strong>"Get your free API key"</strong> on the homepage</li>
+                <li>Your key is shown instantly — copy it</li>
+                <li>Paste it above and click <strong>Save Key</strong></li>
+            </ol>
+        </div>
+
         <!-- Cache Management -->
         <div class="card">
             <div class="card-title">🗄️ AI Cache</div>

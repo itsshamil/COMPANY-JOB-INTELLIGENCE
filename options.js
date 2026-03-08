@@ -11,7 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusEl = document.getElementById('status-msg');
     const cacheInfo = document.getElementById('cache-info');
 
-    // Load existing key
+    // Jina elements
+    const jinaInput = document.getElementById('jina-key-input');
+    const jinaSaveBtn = document.getElementById('jina-save-btn');
+    const jinaTestBtn = document.getElementById('jina-test-btn');
+    const jinaClearBtn = document.getElementById('jina-clear-btn');
+    const jinaStatusEl = document.getElementById('jina-status-msg');
+
+    // Load existing Gemini key
     chrome.storage.sync.get('geminiApiKey', (result) => {
         if (result.geminiApiKey) {
             input.value = result.geminiApiKey;
@@ -19,8 +26,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Load existing Jina key
+    chrome.storage.sync.get('jinaApiKey', (result) => {
+        if (result.jinaApiKey) {
+            jinaInput.value = result.jinaApiKey;
+            showJinaStatus('Jina API key is configured ✓', 'success');
+        }
+    });
+
+    // Save Jina key
+    jinaSaveBtn.addEventListener('click', () => {
+        const key = jinaInput.value.trim();
+        if (!key) {
+            showJinaStatus('Please enter a Jina API key', 'error');
+            return;
+        }
+        chrome.storage.sync.set({ jinaApiKey: key }, () => {
+            showJinaStatus('Jina API key saved successfully! ✓', 'success');
+        });
+    });
+
+    // Test Jina connection
+    jinaTestBtn.addEventListener('click', async () => {
+        const key = jinaInput.value.trim();
+        if (!key) {
+            showJinaStatus('Please enter a Jina API key first', 'error');
+            return;
+        }
+        showJinaStatus('Testing connection...', 'success');
+        try {
+            const res = await fetch(`https://s.jina.ai/${encodeURIComponent('test')}`, {
+                headers: {
+                    'Accept': 'text/plain',
+                    'X-Return-Format': 'markdown',
+                    'Authorization': `Bearer ${key}`
+                }
+            });
+            if (res.ok) {
+                showJinaStatus('✅ Jina connection successful! Web scraping is ready.', 'success');
+                chrome.storage.sync.set({ jinaApiKey: key });
+            } else {
+                showJinaStatus(`❌ Error: ${res.status} — check your API key`, 'error');
+            }
+        } catch (e) {
+            showJinaStatus(`❌ Connection failed: ${e.message}`, 'error');
+        }
+    });
+
+    // Clear Jina key
+    jinaClearBtn.addEventListener('click', () => {
+        jinaInput.value = '';
+        chrome.storage.sync.remove('jinaApiKey', () => {
+            showJinaStatus('Jina API key removed. Web scraping will be disabled.', 'success');
+        });
+    });
+
+    function showJinaStatus(msg, type) {
+        jinaStatusEl.textContent = msg;
+        jinaStatusEl.className = `status ${type}`;
+    }
+
     // Show cache info
     updateCacheInfo();
+
 
     // Save API key
     saveBtn.addEventListener('click', () => {
