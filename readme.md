@@ -73,6 +73,6 @@ The extension follows an **"Offline-First, Search-Enhanced"** philosophy.
 
 ## 🚀 Getting Started
 
-1. **Clone the repo:** `git clone https://github.com/your-repo/job-intelligence`
+1. **Clone the repo:** `https://github.com/itsshamil/COMPANY-JOB-INTELLIGENCE.git`
 2. **Load in Chrome:** Go to `chrome://extensions`, enable "Developer mode," and click "Load unpacked."
 3. **Browse:** Visit any company website (e.g., `apple.com`) and watch the sidebar come to life.
